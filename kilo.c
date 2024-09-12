@@ -18,6 +18,7 @@
         - Turn off IEXTEN (Disables ctrl+v)
         - Turn off ICRNL (Fixes ctrl+m)
         - Turn off OPOST (Fixes newlines)
+        - Turn off BRKINT, INPCK, ISTRIP, CS8 (Misc.)
 
 */
 
@@ -33,6 +34,7 @@
     * c_oflag : Output flags
     * c_cflag : Control flags
     * Control Character : A non-printable character
+    * CS8 : Bitmask with multiple bits. Sets character size to 8 bits per byte
     * Bitflags
         - ECHO : Prints each typed character to the terminal. Turned off example: typing a password when using sudo
         - ICANON : Reads input line-by-line. Flipping it off allows for reading byte-by-byte. This means the program will close as soon as 'q' is pressed
@@ -41,6 +43,7 @@
         - IEXTEN : Controls commands like ctrl+v (waits for a character to be typed then sends said character literally) and ctrl+o (set to be discarded by the terminal driver on MacOS by default)
         - ICRNL : Controls ctrl+m (translates carriage returns into newlines)
         - OPOST : Translates each newline into a newline + carriage return
+        - BRKINT, INPCK, ISTRIP : Most if not all are likely already turned off or don't apply to modern terminal emulators.
 
 */
 
@@ -72,8 +75,9 @@ void enableRawMode() {
 
     // Modify the terminal's attributes
     // Flip IXON, ICRNL, OPOST, ECHO, ICANON, ISIG, and IEXTEN bitflags off
-    rawTermios.c_iflag &= ~(IXON | ICRNL);
+    rawTermios.c_iflag &= ~(IXON | ICRNL | BRKINT | INPCK | ISTRIP);
     rawTermios.c_oflag &= ~(OPOST);
+    rawTermios.c_cflag |= (CS8);
     rawTermios.c_lflag &= ~(ECHO | ICANON | ISIG | IEXTEN);
 
     // Write the terminal's newly modified attributes back out
