@@ -1,6 +1,9 @@
+# include <ctype.h>
+# include <stdio.h>
 # include <stdlib.h>
 # include <termios.h>
 # include <unistd.h>
+
 /*
     ---------
     | NOTES |
@@ -17,9 +20,10 @@
     | GLOSSARY |
     ------------
 
-    - TCSAFLUSH: Says to wait for all pending output to be written to the terminal and flush any input that has not been read
-    - ~: Bitwise-NOT operator. Gives the inverse of a set of bits. Used with bitwise-AND '&' to flip desired bits on/off.
-    - c_lflag: Local flags
+    - TCSAFLUSH : Says to wait for all pending output to be written to the terminal and flush any input that has not been read
+    - ~ : Bitwise-NOT operator. Gives the inverse of a set of bits. Used with bitwise-AND '&' to flip desired bits on/off.
+    - c_lflag : Local flags
+    - Control Character : A non-printable character
 */
 
 /*
@@ -28,6 +32,7 @@
     ------------------
 
     - Reset Terminal: ctrl+c, type 'reset', hit enter. Restart terminal emulator if fix fails
+    - ctrl+z will send the program to the background. Bring it back with the 'fg' command. May immediately quit after
 */
 
 struct termios originalTermios;
@@ -62,6 +67,15 @@ int main() {
     char readChar;
     // Read 1 byte from the standard input into 'readChar' and do so until all bytes have been read
     // read() returns the number of bytes read and will return 0 when it reaches the end of a file
-    while(read(STDIN_FILENO, &readChar, 1) == 1 && readChar != 'q');
+    while(read(STDIN_FILENO, &readChar, 1) == 1 && readChar != 'q') {
+        // Check if input is a control character
+        if (iscntrl(readChar)) {
+            printf("%d\n", readChar);
+        } else {
+            // Format the byte as a decimal number and write it out as a character
+            printf("%d ('%c')\n", readChar, readChar);
+        }
+    }
+
     return 0;
 }
