@@ -9,10 +9,13 @@
     | NOTES |
     ---------
 
-    - By default, terminal starts in canonical/cooked mode. Keyboard input is only sent to a program after enter is pressed.
-    - Goal: raw mode. It will allow the text editor to read live input.
-        - Turn off ECHO. ECHO prints each typed character to the terminal. Turned off e.g. typing a password when using sudo
-        - Turn off ICANON. ICANON reads input line-by-line. Flipping it off allows for reading byte-by-byte. This means the program will close as soon as 'q' is pressed
+    * By default, terminal starts in canonical/cooked mode. Keyboard input is only sent to a program after enter is pressed.
+    * Goal: raw mode. It will allow the text editor to read live input
+        - Turn off ECHO
+        - Turn off ICANON
+        - Turn off ISIG
+        - Turn off IXON
+
 */
 
 /*
@@ -20,10 +23,19 @@
     | GLOSSARY |
     ------------
 
-    - TCSAFLUSH : Says to wait for all pending output to be written to the terminal and flush any input that has not been read
-    - ~ : Bitwise-NOT operator. Gives the inverse of a set of bits. Used with bitwise-AND '&' to flip desired bits on/off.
-    - c_lflag : Local flags
-    - Control Character : A non-printable character
+    * TCSAFLUSH : Says to wait for all pending output to be written to the terminal and flush any input that has not been read
+    * ~ : Bitwise-NOT operator. Gives the inverse of a set of bits. Used with bitwise-AND '&' to flip desired bits on/off
+    * c_lflag : Local flags ("miscellaneous flags")
+    * c_iflag : Input flags
+    * c_oflag : Output flags
+    * c_cflag : Control flags
+    * Control Character : A non-printable character
+    * Bitflags
+        - ECHO : Prints each typed character to the terminal. Turned off example: typing a password when using sudo
+        - ICANON : Reads input line-by-line. Flipping it off allows for reading byte-by-byte. This means the program will close as soon as 'q' is pressed
+        - ISIG : Represents signals such as ctrl+z (sends suspension signal to process) and ctrl+c (sends termination signal to process). When flipped off, these shortcuts can be read as byte inputs
+        - IXON : Flag for software flow control signals, like ctrl+s  (stops transmission of data to terminal) and ctrl+q (resumes transmission of data to terminal)
+
 */
 
 /*
@@ -31,8 +43,9 @@
     | DEBUGGING TIPS |
     ------------------
 
-    - Reset Terminal: ctrl+c, type 'reset', hit enter. Restart terminal emulator if fix fails
-    - ctrl+z will send the program to the background. Bring it back with the 'fg' command. May immediately quit after
+    * Reset Terminal: ctrl+c, type 'reset', hit enter. Restart terminal emulator if fix fails
+    * ctrl+z will send the program to the background. Bring it back with the 'fg' command. May immediately quit after
+
 */
 
 struct termios originalTermios;
@@ -52,8 +65,9 @@ void enableRawMode() {
     struct termios rawTermios = originalTermios;
 
     // Modify the terminal's attributes
-    // Flip only the ECHO and ICANON bitflags off
-    rawTermios.c_lflag &= ~(ECHO | ICANON);
+    // Flip IXON, ECHO, ICANON, and ISIG bitflags off
+    rawTermios.c_iflag &= ~(IXON);
+    rawTermios.c_lflag &= ~(ECHO | ICANON | ISIG);
 
     // Write the terminal's newly modified attributes back out
     // Second argument specifies when to apply terminal modifications
